@@ -17,7 +17,6 @@ int main () {
 
     std::vector<P> coords;
     std::vector<std::vector<float>> matrix;
-    //float matrix[size][size] = {}; 
      
 
     for ( int i = 0, x, y; i < size; i++) { // setting coordinates for points
