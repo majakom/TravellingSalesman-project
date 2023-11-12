@@ -3,6 +3,7 @@
 #include <utility>
 #include <cmath> // square function
 #include <algorithm> // find function
+#include <vector>
 
 
 int main () {
@@ -11,11 +12,12 @@ int main () {
     
     srand(time(nullptr));
 
-    std::cout << "input graph size";
+    std::cout<<"Input graph size: "<<std::endl;
     std::cin >> size;
 
-    P coords[size];
-    float matrix[size][size] = {}; 
+    std::vector<P> coords;
+    std::vector<std::vector<float>> matrix;
+    //float matrix[size][size] = {}; 
      
 
     for ( int i = 0, x, y; i < size; i++) { // setting coordinates for points
@@ -24,46 +26,50 @@ int main () {
         P coordinates(x, y);
         std::cout << coordinates.first << " ";
         std::cout << coordinates.second << "\n";
-        coords[i] = coordinates;
+        coords.push_back(coordinates);
     }
     
-    for ( int i = 0; i < size; i++){ // setting all [n][n] relations with -1, to not take them into account in next step
-        matrix[i][i] = -1;
-    }
+
     
     for ( int i = 0; i < size; i++) { // calculating distance between two points and puting it in matrix
-        for ( int j = (i + 1), x; j < size; j++ ) {
-            float distance = sqrt((coords[j].first - coords[i].first)*(coords[j].first - coords[i].first) + (coords[j].second - coords[i].second)*(coords[j].second - coords[i].second));
-            matrix[i][j] = distance;
-            matrix[j][i] = distance;
-        }
-    }
-    
-    
-    
-    int path[size], lenght = 0;
-    path[0] = 0;
-    
-    for ( int i = 0, location = 0; i < size; i++){
-        int current = 0;
-        float currentValue = 100000000000000000;
-        for ( int j = 0; j < size; j ++) { // finding closest point
-            bool isPresent = std::find(path, path + size, j) != path + size;
-            if (matrix[location][j] >= 0 && matrix[location][j] <= currentValue && !isPresent){
-                current = j;
-                currentValue = matrix[location][current];
-                
+        matrix.push_back(std::vector<float>(size, -1));
+        for (int j = 0; j < size; j++){
+            if (i != j){
+                float distance = sqrt((coords[j].first - coords[i].first)*(coords[j].first - coords[i].first) + (coords[j].second - coords[i].second)*(coords[j].second - coords[i].second));
+                matrix[i][j] = distance;
             }
         }
-        lenght = lenght + matrix[location][current];
-        location = current;
-        path[i+1] = location; // not at the start, to make sure last location is recorded
-        
     }
+    
+    
+    std::vector<int> path;
+    std::vector<int> visited(size, 0);
+    int lenght = 0;
+    path.push_back(0);
+    visited[0] = 1;
+    int dest;
+    float allDist = 0.0;
+
+    while(path.size() < size) {
+        int current = path.back();
+        float currentValue = 100000000000000000;
+        for (int j = 0; j < size; j ++) {
+            if(current!=j && !visited[j] && matrix[current][j] >= 0 && matrix[current][j] <= currentValue){
+                dest = j;
+                currentValue = matrix[current][j];
+            }
+        }
+        path.push_back(dest);
+        visited[dest] = 1;
+        allDist += currentValue;
+
+    }
+    path.push_back(0);
+    allDist += matrix[0][dest];
     
     //showing results
     
-    std::cout << "Lenght of path " << lenght << "\n Path:";
+    std::cout << "Lenght of path " << allDist << "\n Path:";
     
     for ( int i = 0; i < size; i++ ){
         std::cout << path[i] << " ";
