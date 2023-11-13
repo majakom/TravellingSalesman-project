@@ -68,7 +68,7 @@ int main () {
     
     //showing results
     
-    std::cout << "Lenght of path " << allDist << "\n Path:";
+    std::cout << "Lenght of path " << allDist << "\nPath: ";
     
     for ( int i = 0; i <= size; i++ ){
         std::cout << path[i] << " ";
