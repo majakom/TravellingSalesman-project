@@ -70,7 +70,7 @@ int main () {
     
     std::cout << "Lenght of path " << allDist << "\n Path:";
     
-    for ( int i = 0; i < size; i++ ){
+    for ( int i = 0; i <= size; i++ ){
         std::cout << path[i] << " ";
     }
     return 0;
