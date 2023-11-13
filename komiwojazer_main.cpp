@@ -1,8 +1,8 @@
 #include <iostream>
 #include <stdlib.h>
 #include <utility>
-#include <cmath> // square function
-#include <algorithm> // find function
+#include <cmath>
+#include <algorithm>
 #include <vector>
 
 
