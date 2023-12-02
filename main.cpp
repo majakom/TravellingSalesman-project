@@ -21,9 +21,6 @@ int main () {
         std::cout<<"Input graph size: "<<std::endl;
         std::cin >> size;
 
-
-        
-
         for ( int i = 0, x, y; i < size; i++) { // setting coordinates for points
             y = rand() % 10000;
             x = rand() % 10000;
@@ -32,11 +29,11 @@ int main () {
             std::cout << coordinates.second << "\n";
             coords.push_back(coordinates);
         }
-        std::ofstream outputFile("out.txt");
+        std::ofstream outputFile("random.txt");
         if (outputFile.is_open()){
             outputFile << size << std::endl;
             for(int i = 0; i<size; i++){
-                outputFile << i+1 << " " << coords[i].first << coords[i].second << std::endl;
+                outputFile << i+1 << " " << coords[i].first <<" "<< coords[i].second << std::endl;
             }
 
         } else {
@@ -56,8 +53,6 @@ int main () {
         }
     }
     
-    
-
     
     for ( int i = 0; i < size; i++) { // calculating distance between two points and puting it in matrix
         matrix.push_back(std::vector<float>(size, -1));
@@ -96,6 +91,16 @@ int main () {
     allDist += matrix[0][dest];
     
     //showing results
+    std::ofstream outputFile("out.txt");
+    if (outputFile.is_open()){
+        outputFile << "Length of path: " << allDist << std::endl;
+        for(int i = 0; i<=size; i++){
+            outputFile << i+1 << " " << path[i]+1 << std::endl;
+        }
+
+    } else {
+        std::cout<<"Opening file failed"<<std::endl;
+    }
     
     std::cout << "Lenght of path " << allDist << "\nPath: ";
     
