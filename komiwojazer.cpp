@@ -17,7 +17,7 @@ std::pair<double, std::vector<int>> AntsAlgorithm(int ants, int iterations, floa
 std::pair<std::vector<float>, std::vector<int>> DataForAnts();
 void OutputToTerminal(double allDistance, std::vector<int> path, int size);
 void SaveOutput(double allDistance, std::vector<int> path);
-void probabilityValue(int current, std::vector<std::vector<double>> &Matrix, std::vector<long double> &probabilityAnts, std::vector<std::vector<float>> &trailIntensity, std::vector<int> &allowAnt);
+void probabilityValue(int current, float alpha, float beta, std::vector<std::vector<double>> &Matrix, std::vector<long double> &probabilityAnts, std::vector<std::vector<float>> &trailIntensity, std::vector<int> &allowAnt);
 int next(std::vector<long double> &probability, std::vector<std::vector<double>> &Matrix, std::vector<int> &allowAnt);
 int ChooseAnAlgorithm(int choice);
 double GetDistance(std::vector<std::pair<int, int>> coords, int i, int j);
