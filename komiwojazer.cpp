@@ -13,23 +13,42 @@ std::vector<std::pair<int, int>> GenerateRandomGraph(int size);
 std::vector<std::pair<int, int>> GetGraphFromFile(std::string file);
 std::vector<std::vector<double>> Matrix(std::vector<std::pair<int, int>> coords, int size);
 std::pair<double, std::vector<int>> greedyAlgorithmTSP(int size, std::vector<std::vector<double>> matrix);
+std::pair<double, std::vector<int>> AntsAlgorithm(int ants, int iterations, float alpha, float beta, float p, float Q, float c, std::vector<std::vector<double>> &Matrix);
+std::pair<std::vector<float>, std::vector<int>> DataForAnts();
 void OutputToTerminal(double allDistance, std::vector<int> path, int size);
 void SaveOutput(double allDistance, std::vector<int> path);
+void probabilityValue(int current, std::vector<std::vector<double>> &Matrix, std::vector<long double> &probabilityAnts, std::vector<std::vector<float>> &trailIntensity, std::vector<int> &allowAnt);
+int next(std::vector<long double> &probability, std::vector<std::vector<double>> &Matrix, std::vector<int> &allowAnt);
+int ChooseAnAlgorithm(int choice);
 double GetDistance(std::vector<std::pair<int, int>> coords, int i, int j);
+long double randomLongDouble();
 
 int main(int argc, char *argv[]){
     std::vector<std::pair<int, int>> coords;
     std::vector<std::vector<double>> matrix;
     std::pair<double, std::vector<int>> output;
+    std::pair<std::vector<float>, std::vector<int>> dataAnts;
+    std::vector<float> FloatDataForAnts;
+    std::vector<int> IntDataForAnts;
     std::vector<int> path;
     double allDistance;
+    int choice;
     
     
     coords = ChooseInput(argc, argv);
     int size = coords.size();
     matrix = Matrix(coords, size);
-    output = greedyAlgorithmTSP(size, matrix);
 
+    choice = ChooseAnAlgorithm(choice);
+    dataAnts = DataForAnts();
+    FloatDataForAnts = dataAnts.first;
+    IntDataForAnts = dataAnts.second;
+
+    if(choice){
+        output = AntsAlgorithm(IntDataForAnts[0], IntDataForAnts[1], FloatDataForAnts[0], FloatDataForAnts[1], FloatDataForAnts[2], FloatDataForAnts[3], FloatDataForAnts[4], matrix);
+    } else {
+        output = greedyAlgorithmTSP(size, matrix);
+    }
     SaveOutput(output.first, output.second);
     OutputToTerminal(output.first, output.second, size);
     return 0;
@@ -37,17 +56,50 @@ int main(int argc, char *argv[]){
 
 
 
+int ChooseAnAlgorithm(int choice){
+    std::cout<<"Choose a method:"<<std::endl;
+    std::cout<<"(0) Greedy algorithm"<<std::endl;
+    std::cout<<"(1) Ant-colony algorithm"<<std::endl;
+    std::cin>>choice;
+    return choice;
+}
 
+std::pair<std::vector<float>, std::vector<int>> DataForAnts() {
+    std::vector<float> FloatData(5, 0);
+    std::vector<int> IntData(2,0);
+    float alpha, beta, p, Q, c;
+    int ants, iterations;
+
+    std::cout<<"Enter Alpha: "<<std::endl;
+    std::cin>>alpha;
+    FloatData.push_back(alpha);
+    std::cout<<"Enter Beta:"<<std::endl;
+    std::cin>>beta;
+    FloatData.push_back(beta);
+    std::cout<<"Enter p: "<<std::endl;
+    std::cin>>p;
+    FloatData.push_back(p);
+    std::cout<<"Enter Q: "<<std::endl;
+    std::cin>>Q;
+    FloatData.push_back(Q);
+    std::cout<<"Enter c: "<<std::endl;
+    std::cin>>c;
+    FloatData.push_back(c);
+
+    std::cout<<"Enter number of ants: "<<std::endl;
+    std::cin>>ants;
+    IntData.push_back(ants);
+    std::cout<<"Enter number of iterations: "<<std::endl;
+    std::cin>>iterations;
+    IntData.push_back(iterations);
+
+    return std::pair<std::vector<float>, std::vector<int>> (FloatData, IntData);
+}
 
 std::vector<std::pair<int, int>> ChooseInput(int argc, char* argv[]){
     std::string file;
     std::vector<std::pair<int, int>> coords;
     int size, choice;
-
-    std::cout<<"Choose a method:"<<std::endl;
-    std::cout<<"(0) Greedy algorithm"<<std::endl;
-    std::cout<<"(1) Ant-colony algorithm"<<std::endl;
-    std::cin>>choice;
 
     if (argc==2){
         file = argv[1];
@@ -57,8 +109,10 @@ std::vector<std::pair<int, int>> ChooseInput(int argc, char* argv[]){
         std::cin>>size;
         coords = GenerateRandomGraph(size);
     }
+
     return coords;
 }
+
 std::vector<std::pair<int, int>> GenerateRandomGraph(int size) {
     std::ofstream outputFile("random.txt");
     std::vector<std::pair<int, int>> coords;
@@ -167,7 +221,7 @@ void OutputToTerminal(double allDistance, std::vector<int> path, int size) {
 }
 
 //Ants
-float randomLongDouble() {
+long double randomLongDouble() {
     std::srand(time(nullptr));
     return (long double)(rand()) / (long double) (RAND_MAX);
 }
@@ -190,8 +244,8 @@ int next(std::vector<long double> &probability, std::vector<std::vector<double>>
     }
     return -1;
 }
-void probabilityValue(int current, std::vector<std::vector<double>> &Matrix, std::vector<long double> &probabilityAnts, std::vector<std::vector<float>> &trailIntensity, std::vector<int> &allowAnt){
-    float alpha, beta;
+void probabilityValue(int current, float alpha, float beta, std::vector<std::vector<double>> &Matrix, std::vector<long double> &probabilityAnts, std::vector<std::vector<float>> &trailIntensity, std::vector<int> &allowAnt){
+    
     int size = Matrix.size();
     long double numerator, value, valueEnd, denominator = 0.0;
 
@@ -222,7 +276,7 @@ void probabilityValue(int current, std::vector<std::vector<double>> &Matrix, std
         }
     }
 }
-std::pair<float, std::vector<int>> AntsAlgorithm(int iterations, int ants, float c, std::vector<std::vector<double>> &Matrix){
+std::pair<double, std::vector<int>> AntsAlgorithm(int ants, int iterations, float alpha, float beta, float p, float Q, float c, std::vector<std::vector<double>> &Matrix){
     int size = Matrix.size();
     float dist = 0.0;
     std::vector<std::vector<float>> trailIntensity (size, std::vector<float>(size, c));
@@ -231,15 +285,17 @@ std::pair<float, std::vector<int>> AntsAlgorithm(int iterations, int ants, float
     std::vector<std::vector<int>> allowAnt (ants, std::vector<int>(size, 1));
     std::vector<std::vector<long double>> probabilityAnts (ants, std::vector<long double> (size, 0));
     std::vector<int> path;
-    float allDist = 100000000000000000;
+    double allDist = 100000000000000000;
+
+
     for (int a = 0; a < ants; a++){
-        antsTrail[a].push_back(rand() % (size + 1 - 0) + 0);
+        antsTrail[a].push_back(rand() % (size - 0) + 0);
         allowAnt[a][antsTrail[a][0]] = 0;
     }
     for(int k = 0; k < size -1; k++) {
         for (int a = 0; a < ants; a++){
             int current = antsTrail[a].back();
-            probabilityValue(current, Matrix, probabilityAnts[a], trailIntensity, allowAnt[a]);
+            probabilityValue(current, alpha, beta, Matrix, probabilityAnts[a], trailIntensity, allowAnt[a]);
             int point = next(probabilityAnts[a], Matrix, allowAnt[a]);
             antsTrail[a].push_back(point);
             allowAnt[a][point] = 0;
@@ -273,6 +329,6 @@ std::pair<float, std::vector<int>> AntsAlgorithm(int iterations, int ants, float
         }
         
     }
-    return std::pair<float, std::vector<int>>(allDist, path);
+    return std::pair<double, std::vector<int>>(allDist, path);
 }
 
