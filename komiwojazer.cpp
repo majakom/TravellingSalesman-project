@@ -167,9 +167,15 @@ void OutputToTerminal(double allDistance, std::vector<int> path, int size) {
 }
 
 //Ants
+float randomLongDouble() {
+    std::srand(time(nullptr));
+    return (long double)(rand()) / (long double) (RAND_MAX);
+}
+
 int next(std::vector<long double> &probability, std::vector<std::vector<double>> &Matrix, std::vector<int> &allowAnt){
     long double choice;
     int size = Matrix.size();
+    choice = randomLongDouble();
 
     for (int i = 0; i < size; i++) {
         if (choice < probability[i]) {
@@ -216,7 +222,7 @@ void probabilityValue(int current, std::vector<std::vector<double>> &Matrix, std
         }
     }
 }
-void initCircle(int iterations, int ants, float c, std::vector<std::vector<double>> &Matrix, std::vector<int> &path){
+std::pair<float, std::vector<int>> AntsAlgorithm(int iterations, int ants, float c, std::vector<std::vector<double>> &Matrix){
     int size = Matrix.size();
     float dist = 0.0;
     std::vector<std::vector<float>> trailIntensity (size, std::vector<float>(size, c));
@@ -224,7 +230,8 @@ void initCircle(int iterations, int ants, float c, std::vector<std::vector<doubl
     std::vector<std::vector<int>> antsTrail (ants, std::vector<int>());
     std::vector<std::vector<int>> allowAnt (ants, std::vector<int>(size, 1));
     std::vector<std::vector<long double>> probabilityAnts (ants, std::vector<long double> (size, 0));
-
+    std::vector<int> path;
+    float allDist = 100000000000000000;
     for (int a = 0; a < ants; a++){
         antsTrail[a].push_back(rand() % (size + 1 - 0) + 0);
         allowAnt[a][antsTrail[a][0]] = 0;
@@ -264,9 +271,8 @@ void initCircle(int iterations, int ants, float c, std::vector<std::vector<doubl
             antsTrail[a].clear();
             allowAnt[a] = std::vector<int> (size, 1);
         }
-        return std::pair<float, std::vector<int>>(allDist, path);
-}
-
-
+        
+    }
+    return std::pair<float, std::vector<int>>(allDist, path);
 }
 
