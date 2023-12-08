@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
     IntDataForAnts = dataAnts.second;
 
     if(choice){
-        output = AntsAlgorithm(IntDataForAnts[0], IntDataForAnts[1], FloatDataForAnts[0], FloatDataForAnts[1], FloatDataForAnts[2], FloatDataForAnts[3], FloatDataForAnts[4], matrix);
+        output = AntsAlgorithm(IntDataForAnts.front(), IntDataForAnts.back(), FloatDataForAnts.front(), FloatDataForAnts[1], FloatDataForAnts[2], FloatDataForAnts[3], FloatDataForAnts.back(), matrix);
     } else {
         output = greedyAlgorithmTSP(size, matrix);
     }
@@ -65,34 +65,48 @@ int ChooseAnAlgorithm(int choice){
 }
 
 std::pair<std::vector<float>, std::vector<int>> DataForAnts() {
-    std::vector<float> FloatData(5, 0);
-    std::vector<int> IntData(2,0);
+    std::vector<float> FloatData;
+    std::vector<int> IntData;
     float alpha, beta, p, Q, c;
-    int ants, iterations;
+    int ants, iterations, choice;
 
-    std::cout<<"Enter Alpha: "<<std::endl;
-    std::cin>>alpha;
-    FloatData.push_back(alpha);
-    std::cout<<"Enter Beta:"<<std::endl;
-    std::cin>>beta;
-    FloatData.push_back(beta);
-    std::cout<<"Enter p: "<<std::endl;
-    std::cin>>p;
-    FloatData.push_back(p);
-    std::cout<<"Enter Q: "<<std::endl;
-    std::cin>>Q;
-    FloatData.push_back(Q);
-    std::cout<<"Enter c: "<<std::endl;
-    std::cin>>c;
-    FloatData.push_back(c);
+    std::cout<<"(0) Get default data for ants"<<std::endl;
+    std::cout<<"(1) Enter your data for ants"<<std::endl;
+    std::cin>>choice;
 
-    std::cout<<"Enter number of ants: "<<std::endl;
-    std::cin>>ants;
-    IntData.push_back(ants);
-    std::cout<<"Enter number of iterations: "<<std::endl;
-    std::cin>>iterations;
-    IntData.push_back(iterations);
+    if((int)choice){
+        std::cout<<"Enter Alpha: "<<std::endl;
+        std::cin>>alpha;
+        FloatData.push_back(alpha);
+        std::cout<<"Enter Beta:"<<std::endl;
+        std::cin>>beta;
+        FloatData.push_back(beta);
+        std::cout<<"Enter p: "<<std::endl;
+        std::cin>>p;
+        FloatData.push_back(p);
+        std::cout<<"Enter Q: "<<std::endl;
+        std::cin>>Q;
+        FloatData.push_back(Q);
+        std::cout<<"Enter c: "<<std::endl;
+        std::cin>>c;
+        FloatData.push_back(c);
 
+        std::cout<<"Enter number of ants: "<<std::endl;
+        std::cin>>ants;
+        IntData.push_back(ants);
+        std::cout<<"Enter number of iterations: "<<std::endl;
+        std::cin>>iterations;
+        IntData.push_back(iterations);
+    } else {
+        FloatData.push_back(1);
+        FloatData.push_back(5);
+        FloatData.push_back(0.5);
+        FloatData.push_back(100);
+        FloatData.push_back(1);
+
+        IntData.push_back(100);
+        IntData.push_back(100);
+    }
     return std::pair<std::vector<float>, std::vector<int>> (FloatData, IntData);
 }
 
@@ -248,7 +262,7 @@ void probabilityValue(int current, float alpha, float beta, std::vector<std::vec
     
     int size = Matrix.size();
     long double numerator, value, valueEnd, denominator = 0.0;
-
+    
     for (int i = 0; i < size; i++){
         if(allowAnt[i] == 0) {
             continue;
@@ -286,48 +300,49 @@ std::pair<double, std::vector<int>> AntsAlgorithm(int ants, int iterations, floa
     std::vector<std::vector<long double>> probabilityAnts (ants, std::vector<long double> (size, 0));
     std::vector<int> path;
     double allDist = 100000000000000000;
-
-
-    for (int a = 0; a < ants; a++){
-        antsTrail[a].push_back(rand() % (size - 0) + 0);
-        allowAnt[a][antsTrail[a][0]] = 0;
-    }
-    for(int k = 0; k < size -1; k++) {
+    
+    for (int i = 0; i < iterations; i++){
         for (int a = 0; a < ants; a++){
-            int current = antsTrail[a].back();
-            probabilityValue(current, alpha, beta, Matrix, probabilityAnts[a], trailIntensity, allowAnt[a]);
-            int point = next(probabilityAnts[a], Matrix, allowAnt[a]);
-            antsTrail[a].push_back(point);
-            allowAnt[a][point] = 0;
+            antsTrail[a].push_back(rand() % (size - 0) + 0);
+            allowAnt[a][antsTrail[a][0]] = 0;
         }
-    }
-    for (int a = 0; a < ants; a++) {
-        dist = 0.0;
-        antsTrail[a].push_back(antsTrail[a][0]);
-        for (int k = 0; k < size; k++) {
-            dist+=Matrix[antsTrail[a][k]][antsTrail[a][k+1]];
-        }
-        for(int k = 0; k < size; k++) {
-            trailIntensityTmp[antsTrail[a][k+1]][antsTrail[a][k]] += Q/dist;
-            trailIntensityTmp[antsTrail[a][k]][antsTrail[a][k+1]] += Q/dist;
-        }
-        if (dist < allDist){
-            allDist = dist;
-            path = antsTrail[a];
-        }
-        for (int k = 0; k < size; k++) {
-            for (int l = k+1; l < size; l++) {
-                trailIntensity[k][l] = (p*trailIntensity[k][l]) + trailIntensityTmp[k][l];
-                trailIntensity[l][k] = trailIntensity[k][l];
-                trailIntensityTmp[k][l] = 0.0;
-                trailIntensityTmp[l][k] = 0.0;
+        for(int k = 0; k < size -1; k++) {
+            for (int a = 0; a < ants; a++){
+                int current = antsTrail[a].back();
+                probabilityValue(current, alpha, beta, Matrix, probabilityAnts[a], trailIntensity, allowAnt[a]);
+                int point = next(probabilityAnts[a], Matrix, allowAnt[a]);
+                antsTrail[a].push_back(point);
+                allowAnt[a][point] = 0;
             }
         }
         for (int a = 0; a < ants; a++) {
-            antsTrail[a].clear();
-            allowAnt[a] = std::vector<int> (size, 1);
+            dist = 0.0;
+            antsTrail[a].push_back(antsTrail[a][0]);
+            for (int k = 0; k < size; k++) {
+                dist+=Matrix[antsTrail[a][k]][antsTrail[a][k+1]];
+            }
+            for(int k = 0; k < size; k++) {
+                trailIntensityTmp[antsTrail[a][k+1]][antsTrail[a][k]] += Q/dist;
+                trailIntensityTmp[antsTrail[a][k]][antsTrail[a][k+1]] += Q/dist;
+            }
+            if (dist < allDist){
+                allDist = dist;
+                path = antsTrail[a];
+            }
+            for (int k = 0; k < size; k++) {
+                for (int l = k+1; l < size; l++) {
+                    trailIntensity[k][l] = (p*trailIntensity[k][l]) + trailIntensityTmp[k][l];
+                    trailIntensity[l][k] = trailIntensity[k][l];
+                    trailIntensityTmp[k][l] = 0.0;
+                    trailIntensityTmp[l][k] = 0.0;
+                }
+            }
+            for (int a = 0; a < ants; a++) {
+                antsTrail[a].clear();
+                allowAnt[a] = std::vector<int> (size, 1);
+            }
+            
         }
-        
     }
     return std::pair<double, std::vector<int>>(allDist, path);
 }
