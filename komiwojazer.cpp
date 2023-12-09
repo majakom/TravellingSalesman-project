@@ -18,12 +18,13 @@ std::pair<std::vector<float>, std::vector<int>> DataForAnts();
 void OutputToTerminal(double allDistance, std::vector<int> path, int size);
 void SaveOutput(double allDistance, std::vector<int> path);
 void probabilityValue(int current, float alpha, float beta, std::vector<std::vector<double>> &Matrix, std::vector<long double> &probabilityAnts, std::vector<std::vector<float>> &trailIntensity, std::vector<int> &allowAnt);
-int next(std::vector<long double> &probability, std::vector<std::vector<double>> &Matrix, std::vector<int> &allowAnt);
+int next(int size, std::vector<long double> &probability, std::vector<std::vector<double>> &Matrix, std::vector<int> &allowAnt);
 int ChooseAnAlgorithm(int choice);
 double GetDistance(std::vector<std::pair<int, int>> coords, int i, int j);
 long double randomLongDouble();
 
 int main(int argc, char *argv[]){
+    std::srand(time(nullptr));
     std::vector<std::pair<int, int>> coords;
     std::vector<std::vector<double>> matrix;
     std::pair<double, std::vector<int>> output;
@@ -40,9 +41,11 @@ int main(int argc, char *argv[]){
     matrix = Matrix(coords, size);
 
     choice = ChooseAnAlgorithm(choice);
-    dataAnts = DataForAnts();
-    FloatDataForAnts = dataAnts.first;
-    IntDataForAnts = dataAnts.second;
+    if(choice){
+        dataAnts = DataForAnts();
+        FloatDataForAnts = dataAnts.first;
+        IntDataForAnts = dataAnts.second;
+    }
 
     if(choice){
         output = AntsAlgorithm(IntDataForAnts.front(), IntDataForAnts.back(), FloatDataForAnts.front(), FloatDataForAnts[1], FloatDataForAnts[2], FloatDataForAnts[3], FloatDataForAnts.back(), matrix);
@@ -133,8 +136,6 @@ std::vector<std::pair<int, int>> GenerateRandomGraph(int size) {
     std::pair<int, int> newPair;
     int coord1, coord2;
 
-    srand(time(nullptr));
-    
 
     for (int i = 0; i < size; i++) { // setting coordinates for points
         coord1 = rand() % 10000;
@@ -236,15 +237,14 @@ void OutputToTerminal(double allDistance, std::vector<int> path, int size) {
 
 //Ants
 long double randomLongDouble() {
-    std::srand(time(nullptr));
+    
     return (long double)(rand()) / (long double) (RAND_MAX);
 }
 
-int next(std::vector<long double> &probability, std::vector<std::vector<double>> &Matrix, std::vector<int> &allowAnt){
+int next(int size, std::vector<long double> &probability, std::vector<std::vector<double>> &Matrix, std::vector<int> &allowAnt){
     long double choice;
-    int size = Matrix.size();
     choice = randomLongDouble();
-
+    //std::cout<<choice<<std::endl;
     for (int i = 0; i < size; i++) {
         if (choice < probability[i]) {
             return i;
@@ -298,8 +298,10 @@ std::pair<double, std::vector<int>> AntsAlgorithm(int ants, int iterations, floa
     std::vector<std::vector<long double>> probabilityAnts (ants, std::vector<long double> (size, 0));
     std::vector<int> path;
     double allDist = 100000000000000000;
+    std::cout<<"c: "<<c<<" p: "<<p<<" Q: "<<Q<<std::endl;
 
     for (int i = 0; i < iterations; i++){
+        //std::cout<<i+1<<"/"<<iterations<<std::endl;
         for (int a = 0; a < ants; a++){
             antsTrail[a].push_back(rand() % size);
             allowAnt[a][antsTrail[a][0]] = 0;
@@ -308,7 +310,7 @@ std::pair<double, std::vector<int>> AntsAlgorithm(int ants, int iterations, floa
             for (int a = 0; a < ants; a++){
                 int current = antsTrail[a].back();
                 probabilityValue(size, current, alpha, beta, Matrix, probabilityAnts[a], trailIntensity, allowAnt[a]);
-                int point = next(probabilityAnts[a], Matrix, allowAnt[a]);
+                int point = next(size, probabilityAnts[a], Matrix, allowAnt[a]);
                 antsTrail[a].push_back(point);
                 allowAnt[a][point] = 0;
 
@@ -341,7 +343,7 @@ std::pair<double, std::vector<int>> AntsAlgorithm(int ants, int iterations, floa
             antsTrail[a].clear();
             allowAnt[a] = std::vector<int> (size, 1);
         }
-        
+        std::cout<<allDist<<std::endl;
     }
     std::cout<<allDist<<std::endl;
     return std::pair<double, std::vector<int>>(allDist, path);
