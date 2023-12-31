@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string>
 #include <math.h>
+#include <chrono>
 
 std::vector<std::pair<int, int>> ChooseInput(int argc, char* argv[]);
 std::vector<std::pair<int, int>> GenerateRandomGraph(int size);
@@ -16,6 +17,7 @@ std::pair<double, std::vector<int>> greedyAlgorithmTSP(int size, std::vector<std
 std::pair<double, std::vector<int>> AntsAlgorithm(int ants, int iterations, float alpha, float beta, float p, float Q, float c, std::vector<std::vector<double>> &Matrix);
 std::pair<std::vector<float>, std::vector<int>> DataForAnts(int data);
 std::pair<std::vector<float>, std::vector<float>> DataForAntsTester();
+std::pair<double, std::vector<int>> TesterAnts(std::vector<std::vector<double>> &Matrix, std::vector<float> &minmax, std::vector<float> &intervals);
 void OutputToTerminal(double allDistance, std::vector<int> path, int size);
 void SaveOutputGreedy(double allDistance, std::vector<int> path);
 void SaveOutputAnts(double allDistance, std::vector<int> path, std::pair<std::vector<float>, std::vector<int>> dataAnts);
@@ -59,8 +61,7 @@ int main(int argc, char *argv[]){
             dataAntsTester = DataForAntsTester();
             minmax = dataAntsTester.first;
             intervals = dataAntsTester.second;
-            
-
+            TesterAnts(matrix, minmax, intervals);
         }
     }
     else if (!choice) {
@@ -143,7 +144,7 @@ std::pair<std::vector<float>, std::vector<float>> DataForAntsTester() {
     std::cin>>max;
     std::cout<<"Enter interval for Alpha"<<std::endl;
     std::cin>>interval;
-    while ((min > max) && (interval < (max - min))){
+    while (min > max){
         std::cout<<"Enter min value for alpha"<<std::endl;
         std::cin>>min;
         std::cout<<"Enter max value for alpha"<<std::endl;
@@ -163,7 +164,7 @@ std::pair<std::vector<float>, std::vector<float>> DataForAntsTester() {
     std::cin>>max;
     std::cout<<"Enter interval for beta"<<std::endl;
     std::cin>>interval;
-    while((min > max) && (interval < (max - min))) {
+    while(min > max) {
         std::cout<<"Enter min value for beta"<<std::endl;
         std::cin>>min;
         std::cout<<"Enter max value for beta"<<std::endl;
@@ -182,7 +183,7 @@ std::pair<std::vector<float>, std::vector<float>> DataForAntsTester() {
     std::cin>>max;
     std::cout<<"Enter interval for p"<<std::endl;
     std::cin>>interval;
-    while((min > max) && (interval < (max - min))) {
+    while(min > max) {
         std::cout<<"Enter min value for p"<<std::endl;
         std::cin>>min;
         std::cout<<"Enter max value for p"<<std::endl;
@@ -202,7 +203,7 @@ std::pair<std::vector<float>, std::vector<float>> DataForAntsTester() {
     std::cin>>max;
     std::cout<<"Enter interval for Q"<<std::endl;
     std::cin>>interval;
-    while((min > max) && (interval < (max - min))) {
+    while(min > max) {
         std::cout<<"Enter min value for Q"<<std::endl;
         std::cin>>min;
         std::cout<<"Enter max value for Q"<<std::endl;
@@ -222,7 +223,7 @@ std::pair<std::vector<float>, std::vector<float>> DataForAntsTester() {
     std::cin>>max;
     std::cout<<"Enter interval for c"<<std::endl;
     std::cin>>interval;
-    while ((min > max) && (interval < (max - min))) {
+    while (min > max) {
         std::cout<<"Enter min value for c"<<std::endl;
         std::cin>>min;
         std::cout<<"Enter max value for c"<<std::endl;
@@ -242,7 +243,7 @@ std::pair<std::vector<float>, std::vector<float>> DataForAntsTester() {
     std::cin>>max;
     std::cout<<"Enter interval for number of ants"<<std::endl;
     std::cin>>interval;
-    while ((min > max) && (interval < (max - min))) {
+    while (min > max) {
         std::cout<<"Enter min value for ants number"<<std::endl;
         std::cin>>min;
         std::cout<<"Enter max value for ants number"<<std::endl;
@@ -258,14 +259,14 @@ std::pair<std::vector<float>, std::vector<float>> DataForAntsTester() {
 
     std::cout<<"Enter min value for number of itertions"<<std::endl;
     std::cin>>min;
-    std::cout<<"Enter min value for number of iterations"<<std::endl;
+    std::cout<<"Enter max value for number of iterations"<<std::endl;
     std::cin>>max;
     std::cout<<"Enter interval for number of iterations"<<std::endl;
     std::cin>>interval;
-    while ((min > max) && (interval < (max - min))) {
+    while (min > max) {
         std::cout<<"Enter min value for number of itertions"<<std::endl;
         std::cin>>min;
-        std::cout<<"Enter min value for number of iterations"<<std::endl;
+        std::cout<<"Enter max value for number of iterations"<<std::endl;
         std::cin>>max;    
         std::cout<<"Enter interval for number of the iterations"<<std::endl;
         std::cin>>interval;    
@@ -275,7 +276,6 @@ std::pair<std::vector<float>, std::vector<float>> DataForAntsTester() {
         minmax.push_back(max);
         intervals.push_back(interval);
     }  
-
     return std::pair<std::vector<float>, std::vector<float>> (minmax, intervals);
 }
 
@@ -418,7 +418,95 @@ void OutputToTerminal(double allDistance, std::vector<int> path, int size) {
 }
 
 //Ants
-//std::pair<double, std::vector<int>> TesterAnts(int size, std::vector<std::vector<double>> &Matrix, std::vector<float> &minmax, std::vector<float> &intervals);
+
+std::pair<double, std::vector<int>> TesterAnts(std::vector<std::vector<double>> &Matrix, std::vector<float> &minmax, std::vector<float> &intervals) {
+    std::ofstream output("output.txt");
+    double allDist;
+    std::vector<int> path;
+    double shortestDist = 1000000000000000000;
+    std::pair<double, std::vector<int>> outData;
+    std::pair<double, std::vector<int>> ShortestDistData;
+    std::vector<float> params;
+    std::vector<float> allDistances;
+    float timeForShortestDist;
+    float alphaInterval = intervals.front();
+    float betaInterval = intervals[1];
+    float pInterval = intervals[2];
+    float QInterval = intervals[3];
+    float cInterval = intervals[4];
+    float antsInterval = intervals[5];
+    float iterateInterval = intervals[6];
+
+    float alphaMin = minmax.front();
+    float alphaMax = minmax[1];
+    float betaMin = minmax[2];
+    float betaMax = minmax[3];
+    float pMin = minmax[4];
+    float pMax = minmax[5];
+    float QMin = minmax[6];
+    float QMax = minmax[7];
+    float cMin = minmax[8];
+    float cMax = minmax[9];
+    float antsMin = minmax[10];
+    float antsMax = minmax[11];
+    float iterateMin = minmax[12];
+    float iterateMax = minmax[13];
+    std::cout<<alphaMin<<" "<<alphaMax<<" "<<alphaInterval<<std::endl;
+    std::cout<<betaMin<<" "<<betaMax<<" "<<betaInterval<<std::endl;
+    std::cout<<pMin<<" "<<pMax<<" "<<pInterval<<std::endl;
+    std::cout<<cMin<<" "<<cMax<<" "<<cInterval<<std::endl;
+    std::cout<<QMin<<" "<<QMax<<" "<<QInterval<<std::endl;
+    std::cout<<antsMin<<" "<<antsMax<<" "<<antsInterval<<std::endl;
+    std::cout<<iterateMin<<" "<<iterateMax<<" "<<iterateInterval<<std::endl;
+    for(float alpha = alphaMin; alpha <= alphaMax; alpha += alphaInterval) {
+        for(float beta = betaMin; beta <= betaMax; beta += betaInterval) {
+            for(float p = pMin; p <= pMax; p += pInterval) {
+                for(float c = cMin; c <= cMax; c+= cInterval) {
+                    for(float Q = QMin; Q <= QMax; Q += QInterval){
+                        for(float ants = antsMin; ants <= antsMax; ants+=antsInterval) {
+                            for(float iterate = iterateMin; iterate <= iterateMax; iterate += iterateInterval){
+                                auto start = std::chrono::high_resolution_clock::now();
+                                outData = AntsAlgorithm((int)ants, (int)iterate, alpha, beta, p, Q, c, Matrix);
+                                auto stop = std::chrono::high_resolution_clock::now();
+                                auto length = std::chrono::duration_cast<std::chrono::duration<float>>(stop - start);
+                                float time = length.count();
+
+                                output<<"Distance: "<<outData.first<<" , time: "<< time<<std::endl;
+                                output<< "Alpha:" << alpha << ", Beta:" << beta << ", P: " << p << ", C: "<< c<<", Q: "<<Q  << ", ants: "<< ants <<", iterate: "<< iterate<<std::endl;
+                                for(int id = 0; id < outData.second.size(); id++) {
+                                    output << outData.second[id] + 1<< " "; 
+                                }
+                                output<<std::endl<<std::endl;  
+                                if(outData.first<shortestDist) {
+                                    shortestDist = outData.first;
+                                    params.push_back(alpha);
+                                    params.push_back(beta);
+                                    params.push_back(p);
+                                    params.push_back(c);
+                                    params.push_back(Q);
+                                    params.push_back(ants);
+                                    params.push_back(iterate);
+                                    ShortestDistData = outData;   
+                                    timeForShortestDist = time;     
+                                } 
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+
+    }
+    output<<"Shortest Distance: "<<ShortestDistData.first<<std::endl;
+    output<<"Time: "<<timeForShortestDist<<std::endl;
+    output<< "Alpha:" << params[0] << ", Beta:" << params[1] << ", P: " << params[2] << ", C: "<< params[3]<<", Q: "<<params[4] << ", ants: "<< params[5] <<", iterate: "<< params[6] <<std::endl;
+    for(int id = 0; id < ShortestDistData.second.size(); id++) {
+        output <<ShortestDistData.second[id] + 1<< " "; 
+    }
+    output<<std::endl;
+    output.close();
+}
 
 long double randomLongDouble() {
     return (long double)(rand()) / (long double) (RAND_MAX);
@@ -483,7 +571,17 @@ std::pair<double, std::vector<int>> AntsAlgorithm(int ants, int iterate, float a
     std::vector<std::vector<long double>> probability (ants, std::vector<long double> (size, 0));
     std::vector<int> path;
 
+    auto inTime = std::chrono::high_resolution_clock::now();
+
     for (int i = 0; i < iterate; i++){
+        auto inTimeStop = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::duration<float>>(inTimeStop - inTime);
+        if (size > 500 && duration.count() > 290.0){
+            return std::pair<double, std::vector<int>>(allDist, path);
+        }
+        else if (duration.count() > 175.0) {
+            return std::pair<double, std::vector<int>>(allDist, path);
+        }
 
         for (int x = 0; x < ants; x++){
             antsTrail[x].push_back(rand() % size);
